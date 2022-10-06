@@ -10,16 +10,30 @@ from sklearn.preprocessing import MinMaxScaler
 # Datetime wrangling
 from datetime import datetime
 
+# Typehinting 
+from typing import Tuple
+
 # To datetime conversion 
-def to_datetime(x):
+def to_datetime(x: str) -> datetime:
+    """
+    Converts a string to a datetime object
+    An example of the string is 2010-02-02 17:24:55
+    """
     try:
         return datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
     except:
         return pd.to_datetime(x)
 
-def create_date_vars(d):
+def create_date_vars(d: pd.DataFrame) -> pd.DataFrame:
     """
     Creates the datetime variables
+
+    Creates the following columns 
+        * pickup_dayofweek - The day of the week at pickup time
+        * pickup_hour - The hour of the day at pickup time
+        * pickup_dayofyear - The day of the year at pickup time
+        * pickup_hour_sin, pickup_hour_cos - The sine and cosine of the hour of the day
+        * pickup_dayofyear_sin, pickup_dayofyear_cos - The sine and cosine of the day of the year
     """
     # Infering the day of the week from pickup_datetime
     d['pickup_datetime'] = [to_datetime(x) for x in d['pickup_datetime']]
@@ -41,7 +55,7 @@ def create_date_vars(d):
     return d
 
 # Defining the function for distance calculation
-def distance_calculation(df):
+def distance_calculation(df: pd.DataFrame) -> pd.DataFrame:
     """
     Calculates the distance between two points on the earth's surface.
 
@@ -67,7 +81,14 @@ def distance_calculation(df):
     return df 
 
 # Defining the function for dummy creation 
-def create_dummy(df, dummy_var_list):
+def create_dummy(df: pd.DataFrame, dummy_var_list: list) -> Tuple:
+    """
+    Creates dummy variables for the variables in dummy_var_list
+
+    Returns a tuple of the following
+        * df - The dataframe with the dummy variables
+        * dummy_var_list - The list of dummy variables created
+    """
     # Placeholder for the dummy variables
     added_features = []
     for var in dummy_var_list:

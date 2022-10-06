@@ -76,8 +76,6 @@ if __name__ == '__main__':
 
     # Defining the dummy features
     dummy_features = [
-        #'vendor_id',
-        #'store_and_fwd_flag',
         'pickup_dayofweek'
     ]
 
