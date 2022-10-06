@@ -12,3 +12,17 @@ The data should be unzipped into the `data/` directory.
 ├── data
 │   └── train.csv
 ```
+
+# Running the script 
+
+To run the training when all the data is RAM, run the following command:
+
+```
+python -m train_whole_data
+```
+
+To run the training when all the data is provided to the model in chunks, run the following command:
+
+```
+python -m train_iterator
+```
