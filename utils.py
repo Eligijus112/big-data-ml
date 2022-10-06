@@ -13,18 +13,34 @@ from datetime import datetime
 # Typehinting 
 from typing import Tuple
 
+# One hot encoder
+from sklearn.preprocessing import OneHotEncoder
+
+# Import regex
+import re
+
 # To datetime conversion 
 def to_datetime(x: str) -> datetime:
     """
     Converts a string to a datetime object
     An example of the string is 2010-02-02 17:24:55
     """
+    # Inspecting whether x is datetime 
+    if isinstance(x, datetime):
+        return x
+        
     try:
+        # Dropping the UTC part from the date strings
+        x = re.sub(' UTC', '', x)
         return datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
     except:
+        print(f"Error converting {x} to datetime")
         return pd.to_datetime(x)
 
-def create_date_vars(d: pd.DataFrame) -> pd.DataFrame:
+def create_date_vars(
+    d: pd.DataFrame, 
+    date_var: str = 'pickup_datetime'
+    ) -> pd.DataFrame:
     """
     Creates the datetime variables
 
@@ -36,14 +52,14 @@ def create_date_vars(d: pd.DataFrame) -> pd.DataFrame:
         * pickup_dayofyear_sin, pickup_dayofyear_cos - The sine and cosine of the day of the year
     """
     # Infering the day of the week from pickup_datetime
-    d['pickup_datetime'] = [to_datetime(x) for x in d['pickup_datetime']]
-    d['pickup_dayofweek'] = d['pickup_datetime'].dt.dayofweek
+    d[date_var] = [to_datetime(x) for x in d[date_var]]
+    d['pickup_dayofweek'] = d[date_var].dt.dayofweek
 
     # Infering the hour of the day from pickup_datetime
-    d['pickup_hour'] = d['pickup_datetime'].dt.hour
+    d['pickup_hour'] = d[date_var].dt.hour
 
     # Creating a new variable for the day of the year
-    d['pickup_dayofyear'] = d['pickup_datetime'].dt.dayofyear
+    d['pickup_dayofyear'] = d[date_var].dt.dayofyear
 
     # Ensuring a monotonic relationship between pickup_hour and pickup_dayofyear
     d['pickup_hour_sin'] = np.sin(2 * np.pi * d['pickup_hour']/23.0)
@@ -105,9 +121,14 @@ def create_dummy(df: pd.DataFrame, dummy_var_list: list) -> Tuple:
     return df, added_features
 
 # Defining a custom label encoding function 
-def custom_transform(enc, x, prefix):
+def custom_transform(
+    enc: OneHotEncoder, 
+    x: np.array, 
+    prefix: str
+    ) -> pd.DataFrame:
     """
-    Applies a custom transformation to the data
+    Applies a custom transformation to the data by 
+    appending the created dummies to the dataframe
     """
     # Transforming the data
     out = enc.transform(x.reshape(-1, 1))
