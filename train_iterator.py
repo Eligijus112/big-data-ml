@@ -24,6 +24,9 @@ from sklearn.preprocessing import OneHotEncoder
 # Argument parsing
 import argparse
 
+# Model creation 
+from model import create_model
+
 # Defining the class for the batches creation 
 class DataGenerator(keras.utils.Sequence):
     def __init__(
@@ -63,7 +66,7 @@ class DataGenerator(keras.utils.Sequence):
         chunk = chunk.reset_index(drop=True)
 
         # Creating the date variables
-        chunk = create_date_vars(chunk)
+        chunk = create_date_vars(chunk, verbose=False)
 
         # Creating the distance variable
         chunk = distance_calculation(chunk) 
@@ -116,18 +119,7 @@ def train_generator(
     batch_size: int = 128
     ): 
     # Defining a simple feed forward network 
-    model = keras.Sequential([
-        keras.layers.Dense(128, activation=tf.nn.relu, input_shape=(len(final_features),)),
-        keras.layers.Dense(128, activation=tf.nn.relu),
-        keras.layers.Dense(1)
-    ])
-
-    # Compiling the model
-    model.compile(
-        optimizer='adam',
-        loss='mean_squared_error',
-        metrics=['mean_squared_error']
-    )
+    model = create_model(len(final_features), 128, 'adam', 0.001)
 
     for _ in range(epochs):
         # Creating the generator
@@ -156,7 +148,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Defining the hps 
-    batch_size = 512
+    batch_size = 2056
     epochs = 10
 
     # Reading the data 
@@ -164,8 +156,6 @@ if __name__ == '__main__':
 
     # Defining a list of dummy features 
     dummy_features = [
-        #'vendor_id',
-        #'store_and_fwd_flag',
         'pickup_dayofweek',
     ]
 
@@ -200,7 +190,7 @@ if __name__ == '__main__':
             max = chunk[target].max()
 
         # Creating the date variables
-        chunk = create_date_vars(chunk)
+        chunk = create_date_vars(chunk, verbose=False)
 
         # Iterating over the cate features and getting the unique values
         for cat in dummy_features:

@@ -1,10 +1,6 @@
 # Importing the feature engineering pipeline 
 from utils import ft_engineering_pipeline
 
-# Deep learning 
-import tensorflow as tf
-import keras
-
 # Data wrangling
 import pandas as pd
 
@@ -14,52 +10,65 @@ from memory_profiler import profile
 # Command line arguments 
 import argparse
 
-# SYS import 
-import sys 
+# Model creation 
+from model import create_model
+
+# Using CPU 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+# Typehinting tuple
+from typing import Tuple
 
 # Defining the training function
-@profile
-def train(x, y, epochs: int = 10, batch_size: int = 128): 
+def train(x, y, epochs: int = 10, batch_size: int = 128, learning_rate: float = 0.001): 
     # Defining a simple feed forward network 
-    model = keras.Sequential([
-        keras.layers.Dense(128, activation=tf.nn.relu, input_shape=(x.shape[1],)),
-        keras.layers.Dense(128, activation=tf.nn.relu),
-        keras.layers.Dense(1)
-    ])
-
-    # Compiling the model
-    model.compile(
-        optimizer='adam',
-        loss='mean_squared_error',
-        metrics=['mean_squared_error']
-    )
+    model = create_model(x.shape[1], 128, 'adam', learning_rate)
 
     # Fitting the model
-    model.fit(x, y, epochs=epochs, batch_size=batch_size)
+    model.fit(x, y, epochs=epochs, batch_size=batch_size, verbose=1)
 
     # Returning the model
     return model
 
-if __name__ == '__main__':
+def load_data(data_path: str, sample_size: int = None) -> pd.DataFrame:
+    """
+    Loads the data from the given data_path. 
+
+    If sample_size is not None - returning a random subsample of data of size sample_size
+    """
+    # Reading the data
+    data = pd.read_csv(data_path, nrows=sample_size)
+
+    # Returning the data
+    return data
+
+def prep_data(
+    df: pd.DataFrame, 
+    numeric_features: list, 
+    dummy_features: list, 
+    target_name: str
+    ) -> Tuple: 
+    """
+    Creates the x and y for deep learning
+    """
+    # Applying the feature engineering pipeline
+    x, y, _ = ft_engineering_pipeline(df, numeric_features, dummy_features, target_name)
+
+    return x, y
+
+@profile
+def pipeline():
+    """
+    Function that wraps everything together
+    """
     # Parsing the number of rows to use 
     parser = argparse.ArgumentParser()
     parser.add_argument('--rows', type=int, default=None)
     args = parser.parse_args()
 
     # Reading the data 
-    df = pd.read_csv('data/train.csv')
-
-    # If the number of rows is specified we use a sample of the same amount
-    if args.rows:
-        df = df.sample(args.rows)
-        df.reset_index(inplace=True, drop=True)
-
-    # Getting the size of the object in memory
-    print(f"The main dataframe takes: {sys.getsizeof(df) / 10**6} MB in memory")
-
-    # Defining the hps 
-    batch_size = 512
-    epochs = 10 
+    df = load_data('data/train.csv', args.rows)
 
     # Defining the final feature list 
     numeric_features = [
@@ -80,7 +89,17 @@ if __name__ == '__main__':
     ]
 
     # Applying the feature engineering pipeline
-    x, y, _ = ft_engineering_pipeline(df, numeric_features, dummy_features, target)
+    x, y = prep_data(df, numeric_features, dummy_features, target)
+    del df
+
+    # Defining the hps 
+    batch_size = 512
+    epochs = 10 
 
     # Training the model
     model = train(x, y, epochs=epochs, batch_size=batch_size)
+
+    return model
+
+if __name__ == '__main__':
+    pipeline()

@@ -19,6 +19,9 @@ from sklearn.preprocessing import OneHotEncoder
 # Import regex
 import re
 
+# Iteration tracking 
+from tqdm import tqdm 
+
 # To datetime conversion 
 def to_datetime(x: str) -> datetime:
     """
@@ -39,7 +42,8 @@ def to_datetime(x: str) -> datetime:
 
 def create_date_vars(
     d: pd.DataFrame, 
-    date_var: str = 'pickup_datetime'
+    date_var: str = 'pickup_datetime',
+    verbose: bool = True
     ) -> pd.DataFrame:
     """
     Creates the datetime variables
@@ -52,7 +56,7 @@ def create_date_vars(
         * pickup_dayofyear_sin, pickup_dayofyear_cos - The sine and cosine of the day of the year
     """
     # Infering the day of the week from pickup_datetime
-    d[date_var] = [to_datetime(x) for x in d[date_var]]
+    d[date_var] = [to_datetime(x) for x in tqdm(d[date_var], desc='Converting to datetime', total=len(d), disable=not verbose)]
     d['pickup_dayofweek'] = d[date_var].dt.dayofweek
 
     # Infering the hour of the day from pickup_datetime
@@ -107,7 +111,7 @@ def create_dummy(df: pd.DataFrame, dummy_var_list: list) -> Tuple:
     """
     # Placeholder for the dummy variables
     added_features = []
-    for var in dummy_var_list:
+    for var in tqdm(dummy_var_list, desc='Creating dummy variables', total=len(dummy_var_list)):
         dummy = pd.get_dummies(df[var], prefix=var, drop_first=True)
         
         # Adding the new features to list 
