@@ -31,15 +31,37 @@ from model import create_model
 class DataGenerator(keras.utils.Sequence):
     def __init__(
         self, 
-        csv_generator,
-        n_batches,
-        dummy_features,
-        cat_encoders,
-        y_var,
-        y_min, 
-        y_max,
-        final_features
+        csv_generator: pd.io.parsers.readers.TextFileReader,
+        n_batches: int,
+        dummy_features: list,
+        cat_encoders: dict,
+        y_var: str,
+        y_min: float, 
+        y_max: float,
+        final_features: list
         ):
+        """
+        Method to create an iterator in memory 
+
+        Arguments
+        ---------
+        csv_generator: pd.io.parsers.readers.TextFileReader
+            The csv generator from pandas
+        n_batches: int
+            The number of batches that are available in the csv_generator
+        dummy_features: list
+            The list of categorical features that need to be one hot encoded
+        cat_encoders: dict
+            The dictionary of the one hot encoders for the categorical features used for transformation
+        y_var: str
+            The name of the target variable
+        y_min: float
+            The minimum value of the target variable (used in min max scaling)
+        y_max: float
+            The maximum value of the target variable (used in min max scaling)
+        final_features: list
+            The list of the final features that are used for training
+        """
         self.csv_generator = csv_generator
         self.n_batches = n_batches
         self.dummy_features = dummy_features
